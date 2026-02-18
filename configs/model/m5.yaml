@@ -1,0 +1,15 @@
+_target_: src.models.cnn_module.CNNLitModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 1e-3
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ExponentialLR
+  _partial_: true
+  gamma: 0.98
+
+net:
+  _target_: src.models.components.m5.M5
+  num_classes: 10
