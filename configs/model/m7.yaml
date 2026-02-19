@@ -12,4 +12,3 @@ scheduler:
 
 net:
   _target_: src.models.components.m7.M7
-  num_classes: 10

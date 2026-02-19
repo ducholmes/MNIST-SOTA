@@ -71,14 +71,14 @@ class MNISTDataModule(LightningDataModule):
 
             fulltrainset = MNIST(self.hparams.data_dir, train=True)
 
-            generator = torch.Generator.manual_seed(42)
+            generator = torch.Generator().manual_seed(42)
             indices = torch.randperm(len(fulltrainset), generator=generator)
 
             train_indices = indices[:self.hparams.train_val_test_split[0]+1]
             val_indices = indices[self.hparams.train_val_test_split[0]+1:]
 
-            trainset = MNIST(self.hparams.data_dir, train=False, transform=self.train_transforms)
-            valset = MNIST(self.hparams.data_dir, train=False, transform=self.test_transforms)
+            trainset = MNIST(self.hparams.data_dir, train=True, transform=self.train_transforms)
+            valset = MNIST(self.hparams.data_dir, train=True, transform=self.test_transforms)
 
             self.data_train = Subset(trainset, train_indices)
             self.data_val = Subset(valset, val_indices)
