@@ -1,7 +1,0 @@
-# configs/model/ensemble.yaml
-_target_: src.models.ensemble_module.EnsembleLitModule
-num_classes: 10
-artifact_paths:
-  - "entity/project/model-run_id_1:latest"
-  - "entity/project/model-run_id_2:latest"
-  - "entity/project/model-run_id_3:latest"
