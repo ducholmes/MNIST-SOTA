@@ -5,6 +5,7 @@ import rootutils
 from lightning import LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
+import torch
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # ------------------------------------------------------------------------------------ #
@@ -24,6 +25,9 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # more info: https://github.com/ashleve/rootutils
 # ------------------------------------------------------------------------------------ #
 
+_original_load = torch.load
+torch.load = lambda *args, **kwargs: _original_load(*args, **{**kwargs, "weights_only": False})
+
 from src.utils import (
     RankedLogger,
     extras,
@@ -37,15 +41,26 @@ log = RankedLogger(__name__, rank_zero_only=True)
 
 @task_wrapper
 def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Evaluates given checkpoint on a datamodule testset.
+    # assert cfg.ckpt_path
 
-    This method is wrapped in optional @task_wrapper decorator, that controls the behavior during
-    failure. Useful for multiruns, saving info about the crash, etc.
+    if cfg.get("ckpt_path"):
+        ckpt = torch.load(cfg.ckpt_path, map_location="cpu", weights_only=False)
+    else:
+        ckpt = None
+        print("Skip manual load or unable to load")
 
-    :param cfg: DictConfig configuration composed by Hydra.
-    :return: Tuple[dict, dict] with metrics and dict with all instantiated objects.
-    """
-    assert cfg.ckpt_path
+    if ckpt:
+        if "state_dict" in ckpt:
+            ckpt["state_dict"] = {
+                k.replace("_orig_mod.", ""): v
+                for k, v in ckpt["state_dict"].items()
+            }
+        fixed_ckpt_path = cfg.ckpt_path + ".fixed.ckpt"
+        torch.save(ckpt, fixed_ckpt_path)
+        
+        from omegaconf import open_dict
+        with open_dict(cfg):
+            cfg.ckpt_path = fixed_ckpt_path
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
@@ -72,7 +87,7 @@ def evaluate(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log_hyperparameters(object_dict)
 
     log.info("Starting testing!")
-    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.ckpt_path)
+    trainer.test(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
 
     # for predictions use trainer.predict(...)
     # predictions = trainer.predict(model=model, dataloaders=dataloaders, ckpt_path=cfg.ckpt_path)

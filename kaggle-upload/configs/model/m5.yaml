@@ -12,3 +12,5 @@ scheduler:
 
 net:
   _target_: src.models.components.m5.M5
+
+compile: true

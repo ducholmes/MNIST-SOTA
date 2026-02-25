@@ -6,7 +6,7 @@ wandb:
   save_dir: "${paths.output_dir}"
   offline: False
   project: "MNIST-SOTA"
-  log_model: True
+  log_model: False
   entity: "ducholmes-vietnam-national-university-hanoi"
   group: ""
   tags: []

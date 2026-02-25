@@ -12,3 +12,5 @@ scheduler:
 
 net:
   _target_: src.models.components.m7.M7
+
+compile: true

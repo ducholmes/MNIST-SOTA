@@ -3,13 +3,15 @@ defaults:
   - early_stopping
   - model_summary
   - rich_progress_bar
+  - wandb_checkpoint
+  - ema
   - _self_
 
 model_checkpoint:
   dirpath: ${paths.output_dir}/checkpoints
   filename: "epoch_{epoch:03d}"
-  monitor: null
-  save_top_k: 0
+  monitor: "val/acc"
+  save_top_k: 1
   auto_insert_metric_name: False
   save_last: True
 
